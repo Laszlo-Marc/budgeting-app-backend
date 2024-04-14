@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {faker} from '@faker-js/faker';
 import {Category, Expense} from './models/expense';
-
 const testExpense1 = new Expense(
     1,
     Category.FOOD,
@@ -130,18 +131,44 @@ const testExpense13 = new Expense(
     'Debit Card',
 );
 
-export const expenses: Expense[] = [
-    testExpense1,
-    testExpense2,
-    testExpense3,
-    testExpense4,
-    testExpense5,
-    testExpense6,
-    testExpense7,
-    testExpense8,
-    testExpense9,
-    testExpense10,
-    testExpense11,
-    testExpense12,
-    testExpense13,
-];
+// export const expenses: Expense[] = [
+//     testExpense1,
+//     testExpense2,
+//     testExpense3,
+//     testExpense4,
+//     testExpense5,
+//     testExpense6,
+//     testExpense7,
+//     testExpense8,
+//     testExpense9,
+//     testExpense10,
+//     testExpense11,
+//     testExpense12,
+//     testExpense13,
+// ];
+const generateExpenses = () => {
+    const expenses: Expense[] = [];
+    const categories = Object.values(Category); // Get an array of enum values
+
+    for (let i = 1; i <= 100; i++) {
+        const randomCategoryIndex = Math.floor(
+            Math.random() * categories.length,
+        );
+        const randomCategory = categories[randomCategoryIndex];
+
+        const expense = new Expense(
+            i,
+            randomCategory,
+            faker.number.int(300),
+            faker.date.past(),
+            faker.finance.transactionDescription(),
+            faker.company.name(),
+            faker.finance.accountName(),
+        );
+
+        expenses.push(expense);
+    }
+
+    return expenses;
+};
+export const expenses: Expense[] = generateExpenses();

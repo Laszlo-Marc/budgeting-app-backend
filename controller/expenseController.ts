@@ -1,7 +1,7 @@
 import {Request, Response} from 'express';
+import http from 'http';
 import {expenses} from '../expenseStore';
 import {Expense} from '../models/expense';
-
 export const getExpenses = async (req: Request, res: Response) => {
     res.json(expenses);
 };
@@ -20,22 +20,32 @@ export const addExpense = async (req: Request, res: Response) => {
     try {
         const {category, amount, date, description, receiver, account} =
             req.body;
-        const newExpense = new Expense(
-            expenses.length + 1,
-            category,
-            amount,
-            new Date(date),
+        if (
+            !category ||
+            !amount ||
+            !date ||
+            !description ||
+            !receiver ||
+            !account
+        ) {
+            return res.status(400).json({message: 'Invalid expense data'});
+        } else {
+            const newExpense = new Expense(
+                expenses.length + 2,
+                category,
+                amount,
+                new Date(date),
+                description,
+                receiver,
+                account,
+            );
 
-            description,
-
-            receiver,
-            account,
-        );
-        expenses.push(newExpense);
-        return res.status(201).json(newExpense);
+            expenses.push(newExpense);
+            return res.status(201).json(newExpense);
+        }
     } catch (error) {
         console.error('Error adding device: ', error);
-        return res.status(500).json({message: 'Error adding device'});
+        return res.status(400).json({message: 'Error adding device'});
     }
 };
 
@@ -60,8 +70,27 @@ export const deleteExpense = async (req: Request, res: Response) => {
     const index = expenses.findIndex((expense) => expense.id === id);
     if (index > -1) {
         expenses.splice(index, 1);
-        res.send('Expense deleted');
+        res.send('Expense deleted successfully');
     } else {
         res.status(404).send('Expense not found');
     }
+};
+
+export const checkInternet = async (req: Request, res: Response) => {
+    const options = {
+        hostname: 'www.google.com',
+        port: 80,
+        path: '/',
+        method: 'GET',
+    };
+
+    const reqHttp = http.request(options, () => {
+        res.json({isOnline: true});
+    });
+
+    reqHttp.on('error', () => {
+        res.json({isOnline: false});
+    });
+
+    reqHttp.end();
 };
