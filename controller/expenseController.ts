@@ -26,7 +26,15 @@ export const addExpense = async (req: Request, res: Response) => {
             !date ||
             !description ||
             !receiver ||
-            !account
+            !account ||
+            isNaN(amount) ||
+            typeof description !== 'string' ||
+            typeof receiver !== 'string' ||
+            typeof account !== 'string' ||
+            !(new Date(date) instanceof Date) ||
+            description.length < 35 ||
+            account.length < 10 ||
+            receiver.length < 10
         ) {
             return res.status(400).json({message: 'Invalid expense data'});
         } else {
@@ -52,16 +60,31 @@ export const addExpense = async (req: Request, res: Response) => {
 export const updateExpense = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const expense = expenses.find((expense) => expense.getId() == id);
-    if (expense) {
-        const {category, amount, date, description, receiver, account} =
-            req.body;
-        expense.setCategory(category);
-        expense.setAmount(amount);
-        expense.setDate(new Date(date));
-        expense.setDescription(description);
-        expense.setReceiver(receiver);
-        expense.setAccount(account);
+    const {category, amount, date, description, receiver, account} = req.body;
+    if (
+        !category ||
+        !amount ||
+        !date ||
+        !description ||
+        !receiver ||
+        !account ||
+        isNaN(amount) ||
+        typeof description !== 'string' ||
+        typeof receiver !== 'string' ||
+        typeof account !== 'string' ||
+        !(new Date(date) instanceof Date) ||
+        description.length < 35 ||
+        account.length < 10 ||
+        receiver.length < 10
+    ) {
+        return res.status(400).json({message: 'Invalid expense data'});
     } else {
+        expense?.setCategory(category);
+        expense?.setAmount(amount);
+        expense?.setDate(new Date(date));
+        expense?.setDescription(description);
+        expense?.setReceiver(receiver);
+        expense?.setAccount(account);
         res.status(404).send('Expense not found');
     }
 };
