@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {Request, Response} from 'express';
 import http from 'http';
-import {expenses} from '../expenseStore';
-import {Expense} from '../models/expense';
+import {expenses} from '../stores/expenseStore';
 export const getExpenses = async (req: Request, res: Response) => {
     res.json(expenses);
 };
@@ -20,46 +20,27 @@ export const addExpense = async (req: Request, res: Response) => {
     try {
         const {category, amount, date, description, receiver, account} =
             req.body;
-        if (
-            !category ||
-            !amount ||
-            !date ||
-            !description ||
-            !receiver ||
-            !account ||
-            isNaN(amount) ||
-            typeof description !== 'string' ||
-            typeof receiver !== 'string' ||
-            typeof account !== 'string' ||
-            !(new Date(date) instanceof Date) ||
-            description.length < 35 ||
-            account.length < 10 ||
-            receiver.length < 10
-        ) {
-            return res.status(400).json({message: 'Invalid expense data'});
-        } else {
-            const newExpense = new Expense(
-                expenses.length + 2,
-                category,
-                amount,
-                new Date(date),
-                description,
-                receiver,
-                account,
-            );
 
-            expenses.push(newExpense);
-            return res.status(201).json(newExpense);
-        }
+        const newExpense = {
+            id: expenses.length + 2,
+            category: category,
+            amount: amount,
+            date: date,
+            description: description,
+            receiver: receiver,
+            account: account,
+        };
+        expenses.push(newExpense);
+        return res.status(201).json(newExpense);
     } catch (error) {
-        console.error('Error adding device: ', error);
-        return res.status(400).json({message: 'Error adding device'});
+        console.error('Error adding expense: ', error);
+        return res.status(400).json({message: 'Error adding expense'});
     }
 };
 
 export const updateExpense = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const expense = expenses.find((expense) => expense.getId() == id);
+    const expense = expenses.find((expense) => expense.id == id);
     const {category, amount, date, description, receiver, account} = req.body;
     if (
         !category ||
@@ -72,20 +53,33 @@ export const updateExpense = async (req: Request, res: Response) => {
         typeof description !== 'string' ||
         typeof receiver !== 'string' ||
         typeof account !== 'string' ||
-        !(new Date(date) instanceof Date) ||
-        description.length < 35 ||
-        account.length < 10 ||
-        receiver.length < 10
+        !(new Date(date) instanceof Date)
     ) {
         return res.status(400).json({message: 'Invalid expense data'});
     } else {
-        expense?.setCategory(category);
-        expense?.setAmount(amount);
-        expense?.setDate(new Date(date));
-        expense?.setDescription(description);
-        expense?.setReceiver(receiver);
-        expense?.setAccount(account);
-        res.status(404).send('Expense not found');
+        if (expense) {
+            const updatedExpense = {
+                id: id,
+                category: category,
+                amount: amount,
+                date: date,
+                description: description,
+                receiver: receiver,
+                account: account,
+            };
+
+            // Update the original expense object in the array
+            const index = expenses.findIndex((exp) => exp.id === id);
+            console.log('Index:', index);
+            if (index !== -1) {
+                expenses.splice(index, 1, updatedExpense);
+            }
+
+            res.status(200).json(updatedExpense);
+        } else {
+            // Handle case where expense with given id is not found
+            res.status(404).json({message: 'Expense not found'});
+        }
     }
 };
 export const deleteExpense = async (req: Request, res: Response) => {

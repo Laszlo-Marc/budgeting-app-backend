@@ -3,8 +3,8 @@ import {Request, Response} from 'express';
 import request from 'supertest';
 import app from '../app';
 import * as expenseController from '../controller/expenseController';
-import {expenses} from '../expenseStore';
 import {Expense} from '../models/expense';
+import {expenses} from '../stores/expenseStore';
 // Mocking Express response object
 const mockResponse = () => {
     const res: Partial<Response> = {};
