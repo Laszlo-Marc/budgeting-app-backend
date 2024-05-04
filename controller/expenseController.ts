@@ -1,14 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {Request, Response} from 'express';
 import http from 'http';
-import {expenses} from '../stores/expenseStore';
+import {ExpenseModel} from '../models/expenseModel';
+import {ExpenseRepository} from '../repositories/expenseRepository';
+
+export const expenses = new ExpenseRepository();
+
 export const getExpenses = async (req: Request, res: Response) => {
-    res.json(expenses);
+    try {
+        const page = parseInt(req.query.page as string) || 0;
+        const allExpenses = await expenses.getExpenses(page);
+        res.json(allExpenses);
+    } catch (error) {
+        console.error('Error getting expenses: ', error);
+        return res.status(400).json({message: 'Error getting expenses'});
+    }
 };
 
 export const getExpenseBYID = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const expense = expenses.find((expense) => expense.id === id);
+    const expense = await ExpenseModel.findById({id: id});
     if (expense) {
         res.json(expense);
     } else {
@@ -18,19 +29,19 @@ export const getExpenseBYID = async (req: Request, res: Response) => {
 
 export const addExpense = async (req: Request, res: Response) => {
     try {
-        const {category, amount, date, description, receiver, account} =
+        const {category, amount, date, description, receiver, account, userid} =
             req.body;
 
         const newExpense = {
-            id: expenses.length + 2,
             category: category,
             amount: amount,
             date: date,
             description: description,
             receiver: receiver,
             account: account,
+            userid: userid,
         };
-        expenses.push(newExpense);
+        expenses.addExpense(newExpense);
         return res.status(201).json(newExpense);
     } catch (error) {
         console.error('Error adding expense: ', error);
@@ -40,8 +51,9 @@ export const addExpense = async (req: Request, res: Response) => {
 
 export const updateExpense = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const expense = expenses.find((expense) => expense.id == id);
-    const {category, amount, date, description, receiver, account} = req.body;
+    const expense: any = ExpenseModel.findById({id: id});
+    const {category, amount, date, description, receiver, account, userid} =
+        req.body;
     if (
         !category ||
         !amount ||
@@ -58,24 +70,15 @@ export const updateExpense = async (req: Request, res: Response) => {
         return res.status(400).json({message: 'Invalid expense data'});
     } else {
         if (expense) {
-            const updatedExpense = {
-                id: id,
-                category: category,
-                amount: amount,
-                date: date,
-                description: description,
-                receiver: receiver,
-                account: account,
-            };
-
-            // Update the original expense object in the array
-            const index = expenses.findIndex((exp) => exp.id === id);
-            console.log('Index:', index);
-            if (index !== -1) {
-                expenses.splice(index, 1, updatedExpense);
-            }
-
-            res.status(200).json(updatedExpense);
+            expense.category = category;
+            expense.amount = amount;
+            expense.date = date;
+            expense.description = description;
+            expense.receiver = receiver;
+            expense.account = account;
+            expense.userid = userid;
+            await expense.save();
+            res.status(200).json(expense);
         } else {
             // Handle case where expense with given id is not found
             res.status(404).json({message: 'Expense not found'});
@@ -84,9 +87,9 @@ export const updateExpense = async (req: Request, res: Response) => {
 };
 export const deleteExpense = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const index = expenses.findIndex((expense) => expense.id === id);
-    if (index > -1) {
-        expenses.splice(index, 1);
+    const expense = ExpenseModel.findById({id: id});
+    if (expense) {
+        await expense.deleteOne();
         res.send('Expense deleted successfully');
     } else {
         res.status(404).send('Expense not found');

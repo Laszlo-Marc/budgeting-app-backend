@@ -1,14 +1,26 @@
-import { Request, Response } from 'express';
-import { users } from '../stores/userStore';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {Request, Response} from 'express';
+import {UserModel} from '../models/userModel';
+import {UserRepository} from '../repositories/userRepository';
+
+export const users = new UserRepository();
+
 export const getUsers = async (req: Request, res: Response) => {
-    res.json(users);
+    try {
+        const page = parseInt(req.query.page as string);
+        const allUsers = await users.getUsers(page);
+        res.json(allUsers);
+    } catch (error) {
+        console.error('Error getting users: ', error);
+        return res.status(400).json({message: 'Error getting users'});
+    }
 };
 
 export const getUserById = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const user = users.find((user) => user.id === id);
+    const user = await UserModel.findById({id: id});
     if (user) {
-        res.json(user);
+        res.status(200).json(user);
     } else {
         res.status(404).send('User not found');
     }
@@ -29,7 +41,6 @@ export const addUser = async (req: Request, res: Response) => {
             return res.status(400).json({message: 'Invalid user data'});
         } else {
             const newUser = {
-                id: users.length + 2,
                 name: name,
                 age: age,
                 email: email,
@@ -37,7 +48,7 @@ export const addUser = async (req: Request, res: Response) => {
                 expenses: expenses,
             };
 
-            users.push(newUser);
+            users.addUser(newUser);
             return res.status(201).json(newUser);
         }
     } catch (error) {
@@ -48,7 +59,7 @@ export const addUser = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const user = users.find((user) => user.id == id);
+    const user = UserModel.findOne({uid: id});
     const {name, age, email, password} = req.body;
     if (
         !name ||
@@ -61,24 +72,24 @@ export const updateUser = async (req: Request, res: Response) => {
     ) {
         return res.status(400).json({message: 'Invalid user data'});
     } else {
-        if (user) {
-            user.name = name;
-            user.age = age;
-            user.email = email;
-            user.password = password;
-
-            res.json(user);
-        } else {
-            res.status(404).send('User not found');
+        if (await user) {
+            const updatedUser = await UserModel.updateOne(
+                {uid: id},
+                {name: name, age: age, email: email, password: password},
+            );
+            res.status(200).json(updatedUser);
         }
     }
 };
 export const deleteUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const index = users.findIndex((user) => user.id === id);
-    if (index > -1) {
-        users.splice(index, 1);
-        res.send('User deleted successfully');
+    console.log('Deleting user with id: ', id);
+    const user = await UserModel.findOne({uid: id});
+    console.log('User found: ', user);
+    if (user) {
+        await user.deleteOne();
+        console.log('User deleted');
+        res.status(200).send('User deleted');
     } else {
         res.status(404).send('User not found');
     }
