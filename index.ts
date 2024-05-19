@@ -28,7 +28,7 @@ mongoose
             console.log(
                 `Server is running on port http://localhost:${PORT}/api`,
             );
-            //populateDatabase(users, expenses);
+            //populateDatabase(users);
         });
     })
     .catch((error) => {

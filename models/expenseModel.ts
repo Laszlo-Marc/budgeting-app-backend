@@ -24,11 +24,11 @@ export enum Category {
 const ExpenseSchema = new mongoose.Schema({
     category: {type: String, enum: Object.values(Category)},
     amount: {type: Number, required: true},
-    date: {type: Date, required: true},
+    date: {type: String, required: true},
     description: {type: String, required: true, maxlength: 40000},
     receiver: {type: String, required: true},
     account: {type: String, required: true},
     userid: {type: Number, required: true},
 });
 ExpenseSchema.plugin(AutoIncrement, {inc_field: 'eid'});
-export const ExpenseModel = mongoose.model<IExpense>('Expenses', ExpenseSchema);
+export const ExpenseModel = mongoose.model<IExpense>('expenses', ExpenseSchema);

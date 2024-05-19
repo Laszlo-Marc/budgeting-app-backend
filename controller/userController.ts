@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {Request, Response} from 'express';
+import {ExpenseModel} from '../models/expenseModel';
 import {UserModel} from '../models/userModel';
 import {UserRepository} from '../repositories/userRepository';
 
@@ -83,12 +84,10 @@ export const updateUser = async (req: Request, res: Response) => {
 };
 export const deleteUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    console.log('Deleting user with id: ', id);
     const user = await UserModel.findOne({uid: id});
-    console.log('User found: ', user);
     if (user) {
+        await ExpenseModel.deleteMany({userid: id});
         await user.deleteOne();
-        console.log('User deleted');
         res.status(200).send('User deleted');
     } else {
         res.status(404).send('User not found');

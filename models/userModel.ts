@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import mongoose, {Document, Schema} from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export interface IUser extends Document {
@@ -16,4 +16,4 @@ const UserSchema: Schema = new Schema({
     password: {type: String, required: true},
 });
 UserSchema.plugin(AutoIncrement, {inc_field: 'uid'});
-export const UserModel = mongoose.model<IUser>('Users', UserSchema);
+export const UserModel = mongoose.model<IUser>('users', UserSchema);
