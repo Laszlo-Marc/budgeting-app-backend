@@ -13,6 +13,7 @@ export class UserRepository {
         const age = faker.number.int(80);
         const email = faker.internet.email();
         const password = faker.internet.password();
+
         const userData = {
             name: name,
             age: age,

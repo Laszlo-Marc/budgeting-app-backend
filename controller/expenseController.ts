@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response } from 'express';
+import {Request, Response} from 'express';
 import http from 'http';
-import { ExpenseModel } from '../models/expenseModel';
-import { ExpenseRepository } from '../repositories/expenseRepository';
+import {ExpenseModel} from '../models/expenseModel';
+import {ExpenseRepository} from '../repositories/expenseRepository';
 
 export const expenses = new ExpenseRepository();
 
